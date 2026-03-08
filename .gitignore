@@ -1,0 +1,25 @@
+# Environment variables — NEVER commit real credentials
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+*.log
