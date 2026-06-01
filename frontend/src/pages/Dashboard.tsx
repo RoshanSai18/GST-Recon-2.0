@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -9,6 +9,7 @@ import {
   CheckCircle,
   XCircle,
   RefreshCw,
+  ArrowUpRight,
 } from "lucide-react";
 import {
   BarChart,
@@ -31,9 +32,8 @@ import type { GraphNode as ApiGraphNode, GraphEdge as ApiGraphEdge } from "@/lib
 import {
   monthlyReconciliation,
   riskProfiles,
-  supplyChainNodes,
-  supplyChainEdges,
 } from "@/lib/mockData";
+import { Link } from "react-router-dom";
 
 const PIE_COLORS = [
   "hsl(0 0% 8%)",
@@ -54,67 +54,112 @@ const TYPE_COLORS: Record<string, string> = {
   HighRisk:   "hsl(8 90% 60%)",
 };
 
-// Mini force-layout for the real graph overview
-function layoutNodes(
-  nodes: ApiGraphNode[],
-  edges: ApiGraphEdge[],
-  width: number,
-  height: number
-): Record<string, { x: number; y: number }> {
-  const positions: Record<string, { x: number; y: number; vx: number; vy: number }> = {};
-  nodes.forEach((n, i) => {
-    const angle = (i / nodes.length) * Math.PI * 2;
-    positions[n.id] = {
-      x: width / 2 + Math.cos(angle) * 120,
-      y: height / 2 + Math.sin(angle) * 100,
-      vx: 0, vy: 0,
-    };
-  });
-  for (let iter = 0; iter < 60; iter++) {
-    for (let i = 0; i < nodes.length; i++) {
-      for (let j = i + 1; j < nodes.length; j++) {
-        const a = positions[nodes[i].id], b = positions[nodes[j].id];
-        const dx = b.x - a.x, dy = b.y - a.y;
-        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-        const f = 1800 / (dist * dist);
-        a.vx -= (dx / dist) * f; a.vy -= (dy / dist) * f;
-        b.vx += (dx / dist) * f; b.vy += (dy / dist) * f;
-      }
-    }
-    edges.forEach((e) => {
-      const a = positions[e.source], b = positions[e.target];
-      if (!a || !b) return;
-      const dx = b.x - a.x, dy = b.y - a.y;
-      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-      const f = dist * 0.01;
-      a.vx += (dx / dist) * f; a.vy += (dy / dist) * f;
-      b.vx -= (dx / dist) * f; b.vy -= (dy / dist) * f;
-    });
-    nodes.forEach((n) => {
-      const p = positions[n.id];
-      p.vx = (p.vx + (width / 2 - p.x) * 0.008) * 0.85;
-      p.vy = (p.vy + (height / 2 - p.y) * 0.008) * 0.85;
-      p.x = Math.max(35, Math.min(width - 35, p.x + p.vx));
-      p.y = Math.max(35, Math.min(height - 35, p.y + p.vy));
-    });
-  }
-  return positions;
+interface SimNode {
+  id: string;
+  type: string;
+  label: string;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  risk_level?: string;
 }
 
-// Static node positions (mock fallback)
-const nodePositions: Record<string, { x: number; y: number }> = {
-  n1: { x: 280, y: 160 },
-  n2: { x: 80,  y: 60  },
-  n3: { x: 80,  y: 260 },
-  n4: { x: 480, y: 60  },
-  n5: { x: 500, y: 180 },
-  n6: { x: 480, y: 260 },
-};
+function toSimInput(n: ApiGraphNode): { id: string; type: string; label: string; risk_level?: string } {
+  return {
+    id: n.id,
+    type: n.label,
+    label: n.id,
+    risk_level: n.risk_level,
+  };
+}
+
+function runForceSimulation(
+  nodes: { id: string; type: string; label: string; risk_level?: string }[],
+  edges: { source: string; target: string }[],
+  width: number,
+  height: number
+): SimNode[] {
+  const typeGroups: Record<string, number> = {};
+  let groupIdx = 0;
+  nodes.forEach((n) => {
+    if (!(n.type in typeGroups)) typeGroups[n.type] = groupIdx++;
+  });
+  const groupCount = Math.max(groupIdx, 1);
+
+  const simNodes: SimNode[] = nodes.map((n) => {
+    const gIdx = typeGroups[n.type];
+    const angle = (gIdx / groupCount) * Math.PI * 2;
+    const r = 120;
+    return {
+      ...n,
+      x: width / 2 + Math.cos(angle) * r + (Math.random() - 0.5) * 80,
+      y: height / 2 + Math.sin(angle) * r + (Math.random() - 0.5) * 80,
+      vx: 0,
+      vy: 0,
+    };
+  }) as SimNode[];
+
+  const nodeMap = new Map<string, number>();
+  simNodes.forEach((n, i) => nodeMap.set(n.id, i));
+
+  const iterations = 80;
+  const repulsion = 2200;
+  const attraction = 0.012;
+  const damping = 0.85;
+  const centerGravity = 0.008;
+
+  for (let iter = 0; iter < iterations; iter++) {
+    for (let i = 0; i < simNodes.length; i++) {
+      for (let j = i + 1; j < simNodes.length; j++) {
+        const dx = simNodes[j].x - simNodes[i].x;
+        const dy = simNodes[j].y - simNodes[i].y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const force = repulsion / (dist * dist);
+        const fx = (dx / dist) * force;
+        const fy = (dy / dist) * force;
+        simNodes[i].vx -= fx;
+        simNodes[i].vy -= fy;
+        simNodes[j].vx += fx;
+        simNodes[j].vy += fy;
+      }
+    }
+
+    edges.forEach((e) => {
+      const si = nodeMap.get(e.source);
+      const ti = nodeMap.get(e.target);
+      if (si === undefined || ti === undefined || si === ti) return;
+      const dx = simNodes[ti].x - simNodes[si].x;
+      const dy = simNodes[ti].y - simNodes[si].y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+      const force = dist * attraction;
+      simNodes[si].vx += (dx / dist) * force;
+      simNodes[si].vy += (dy / dist) * force;
+      simNodes[ti].vx -= (dx / dist) * force;
+      simNodes[ti].vy -= (dy / dist) * force;
+    });
+
+    simNodes.forEach((n) => {
+      n.vx += (width / 2 - n.x) * centerGravity;
+      n.vy += (height / 2 - n.y) * centerGravity;
+      n.vx *= damping;
+      n.vy *= damping;
+      n.x += n.vx;
+      n.y += n.vy;
+      n.x = Math.max(36, Math.min(width - 36, n.x));
+      n.y = Math.max(36, Math.min(height - 36, n.y));
+    });
+  }
+
+  return simNodes;
+}
 
 const Dashboard = () => {
   const [selectedNode, setSelectedNode] = useState<string>("n1");
   const [resolved, setResolved] = useState(false);
   const [resolving, setResolving] = useState(false);
+  const GRAPH_WIDTH = 580;
+  const GRAPH_HEIGHT = 320;
 
   // â”€â”€ API Queries â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const { data: reconcileStats, isLoading: statsLoading, refetch: refetchStats } =
@@ -153,11 +198,34 @@ const Dashboard = () => {
         { name: "Payments",  value: 178 },
       ];
 
-  // â”€â”€ Graph layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const useRealGraph = !!graphOverview && graphOverview.nodes.length > 0;
-  const realPositions = useRealGraph
-    ? layoutNodes(graphOverview!.nodes, graphOverview!.edges, 580, 320)
-    : null;
+
+  const simNodes = useMemo(
+    () =>
+      useRealGraph
+        ? runForceSimulation(
+            graphOverview!.nodes.map(toSimInput),
+            graphOverview!.edges,
+            GRAPH_WIDTH,
+            GRAPH_HEIGHT
+          )
+        : [],
+    [useRealGraph, graphOverview]
+  );
+
+  const nodeMap = useMemo(() => {
+    const map = new Map<string, SimNode>();
+    simNodes.forEach((n) => map.set(n.id, n));
+    return map;
+  }, [simNodes]);
+
+  useEffect(() => {
+    if (!useRealGraph) return;
+    const exists = graphOverview!.nodes.some((n) => n.id === selectedNode);
+    if (!exists) {
+      setSelectedNode(graphOverview!.nodes[0]?.id ?? selectedNode);
+    }
+  }, [useRealGraph, graphOverview, selectedNode]);
 
   // â”€â”€ Risk profile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const mockProfile = riskProfiles[selectedNode] ?? riskProfiles["n1"];
@@ -246,14 +314,22 @@ const Dashboard = () => {
                   </h2>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {useRealGraph
-                      ? `${graphOverview!.node_count} nodes Â· ${graphOverview!.edge_count} edges Â· click a node to inspect`
+                      ? `${graphOverview!.node_count} nodes · ${graphOverview!.edge_count} edges · click a node to inspect`
                       : "Click a node to view risk profile"}
                   </p>
                 </div>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-foreground/[0.05] text-xs font-medium text-foreground">
-                  <span className="w-1.5 h-1.5 rounded-full bg-foreground animate-pulse" />
-                  {useRealGraph ? "Live" : "Demo"}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-foreground/[0.05] text-xs font-medium text-foreground">
+                    <span className="w-1.5 h-1.5 rounded-full bg-foreground animate-pulse" />
+                    {useRealGraph ? "Live" : "Demo"}
+                  </span>
+                  <Button asChild size="sm" variant="outline" className="h-7 px-2.5 text-xs">
+                    <Link to="/graph" className="inline-flex items-center gap-1">
+                      Open Graph Workspace
+                      <ArrowUpRight size={12} />
+                    </Link>
+                  </Button>
+                </div>
               </div>
 
               {graphLoading ? (
@@ -261,108 +337,58 @@ const Dashboard = () => {
                   <RefreshCw size={18} className="animate-spin text-muted-foreground" />
                 </div>
               ) : useRealGraph ? (
-                <svg viewBox="0 0 580 320" className="w-full h-auto bg-surface-sunken rounded-xl border border-border/60">
-                  {graphOverview!.edges.slice(0, 80).map((edge, i) => {
-                    const s = realPositions![edge.source];
-                    const t = realPositions![edge.target];
-                    if (!s || !t) return null;
-                    const isRisk =
-                      graphOverview!.nodes.find((n) => n.id === edge.source)?.risk_level === "High";
+                <svg
+                  viewBox={`0 0 ${GRAPH_WIDTH} ${GRAPH_HEIGHT}`}
+                  className="w-full h-auto bg-surface-sunken rounded-xl border border-border/60"
+                  style={{
+                    backgroundImage: "radial-gradient(circle at 1px 1px, hsl(0 0% 0% / 0.06) 1px, transparent 0)",
+                    backgroundSize: "28px 28px",
+                  }}
+                >
+                  {graphOverview!.edges.slice(0, 110).map((edge, i) => {
+                    const s = nodeMap.get(edge.source);
+                    const t = nodeMap.get(edge.target);
+                    if (!s || !t || s.id === t.id) return null;
                     return (
                       <line
                         key={i}
                         x1={s.x} y1={s.y} x2={t.x} y2={t.y}
-                        stroke={isRisk ? "hsl(8 90% 60%)" : "hsl(0 0% 75%)"}
-                        strokeWidth={isRisk ? 2 : 1.5}
-                        strokeDasharray={isRisk ? "6 4" : "none"}
-                        strokeOpacity={0.45}
+                        stroke={edge.alert ? "hsl(8 90% 60%)" : "hsl(0 0% 75%)"}
+                        strokeWidth={edge.alert ? 2 : 1}
+                        strokeDasharray={edge.alert ? "6 4" : "none"}
+                        strokeOpacity={0.5}
                       />
                     );
                   })}
-                  {graphOverview!.nodes.slice(0, 50).map((node) => {
-                    const pos = realPositions![node.id];
-                    if (!pos) return null;
+
+                  {simNodes.slice(0, 70).map((node) => {
                     const isSelected = selectedNode === node.id;
-                    const isHighRisk = node.risk_level === "High";
-                    const color = TYPE_COLORS[node.label] ?? (isHighRisk ? "hsl(8 90% 60%)" : "hsl(0 0% 30%)");
                     return (
                       <g key={node.id} onClick={() => setSelectedNode(node.id)} className="cursor-pointer">
                         <circle
-                          cx={pos.x} cy={pos.y}
-                          r={isSelected ? 22 : 18}
-                          fill={color}
-                          fillOpacity={isSelected ? 1 : 0.85}
-                          stroke={isSelected ? "hsl(0 0% 40%)" : "transparent"}
-                          strokeWidth={2}
+                          cx={node.x}
+                          cy={node.y}
+                          r={node.type === "Taxpayer" || node.type === "HighRisk" || node.risk_level === "High" ? 18 : 14}
+                          fill={node.risk_level === "High" ? TYPE_COLORS["HighRisk"] : (TYPE_COLORS[node.type] || "hsl(0 0% 50%)")}
+                          stroke={isSelected ? "hsl(0 0% 40%)" : node.risk_level === "High" ? "hsl(8 90% 85%)" : "white"}
+                          strokeWidth={isSelected ? 2.5 : node.risk_level === "High" ? 2 : 1.5}
+                          opacity={isSelected ? 1 : 0.9}
                         />
                         <text
-                          x={pos.x} y={pos.y + 1}
-                          textAnchor="middle" dominantBaseline="middle"
-                          fill="white" fontSize="7" fontWeight="600" fontFamily="Inter, sans-serif"
-                        >
-                          {node.id.length > 12 ? node.id.slice(0, 12) + "â€¦" : node.id}
-                        </text>
-                        <text
-                          x={pos.x} y={pos.y + 32}
+                          x={node.x} y={node.y + 28}
                           textAnchor="middle"
                           fill="hsl(0 0% 40%)" fontSize="8" fontFamily="Inter, sans-serif"
                         >
-                          {node.label}
+                          {node.label.length > 16 ? node.label.slice(0, 16) + "…" : node.label}
                         </text>
                       </g>
                     );
                   })}
                 </svg>
               ) : (
-                /* Fallback: static mock graph */
-                <svg viewBox="0 0 580 320" className="w-full h-auto bg-surface-sunken rounded-xl border border-border/60">
-                  {supplyChainEdges.map((edge, i) => {
-                    const s = nodePositions[edge.source], t = nodePositions[edge.target];
-                    if (!s || !t) return null;
-                    return (
-                      <line
-                        key={i}
-                        x1={s.x} y1={s.y} x2={t.x} y2={t.y}
-                        stroke={edge.alert ? "hsl(8 90% 60%)" : "hsl(0 0% 75%)"}
-                        strokeWidth={edge.alert ? 2 : 1.5}
-                        strokeDasharray={edge.alert ? "6 4" : "none"}
-                        strokeOpacity={edge.alert ? 0.7 : 0.4}
-                      />
-                    );
-                  })}
-                  {supplyChainNodes.map((node) => {
-                    const pos = nodePositions[node.id];
-                    if (!pos) return null;
-                    const isSelected = selectedNode === node.id;
-                    const isHighRisk = node.type === "HighRisk";
-                    return (
-                      <g key={node.id} onClick={() => setSelectedNode(node.id)} className="cursor-pointer">
-                        <circle
-                          cx={pos.x} cy={pos.y}
-                          r={isSelected ? 26 : 22}
-                          fill={isHighRisk ? "hsl(8 90% 60%)" : "hsl(0 0% 8%)"}
-                          fillOpacity={isSelected ? 1 : 0.85}
-                          stroke={isSelected ? "hsl(0 0% 40%)" : "transparent"}
-                          strokeWidth={2}
-                        />
-                        <text
-                          x={pos.x} y={pos.y + 1}
-                          textAnchor="middle" dominantBaseline="middle"
-                          fill="white" fontSize="8" fontWeight="600" fontFamily="Inter, sans-serif"
-                        >
-                          {node.label.length > 10 ? node.label.slice(0, 10) + "â€¦" : node.label}
-                        </text>
-                        <text
-                          x={pos.x} y={pos.y + 40}
-                          textAnchor="middle"
-                          fill="hsl(0 0% 40%)" fontSize="9" fontFamily="Inter, sans-serif"
-                        >
-                          {node.type}
-                        </text>
-                      </g>
-                    );
-                  })}
-                </svg>
+                <div className="w-full h-[320px] rounded-xl bg-surface-sunken border border-border/60 flex items-center justify-center">
+                  <p className="text-sm text-muted-foreground">No graph data yet. Open Graph tab for explorer mode.</p>
+                </div>
               )}
             </div>
 

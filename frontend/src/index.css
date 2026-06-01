@@ -6,44 +6,46 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 5%;
+    --background: 0 0% 9%;
+    --foreground: 0 0% 90%;
 
-    --card: 0 0% 98%;
-    --card-foreground: 0 0% 5%;
+    --card: 0 0% 15%;
+    --card-foreground: 0 0% 90%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 5%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 90%;
 
-    --primary: 0 0% 5%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 0 0% 90%;
+    --primary-foreground: 0 0% 9%;
 
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 5%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 90%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 40%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 83%;
 
-    --accent: 0 0% 93%;
-    --accent-foreground: 0 0% 5%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 90%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 88%;
-    --input: 0 0% 88%;
-    --ring: 0 0% 5%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 0 0% 83%;
+
+    --nav: 0 0% 9%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 25%;
-    --sidebar-primary: 0 0% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 0 0% 95%;
-    --sidebar-accent-foreground: 0 0% 10%;
-    --sidebar-border: 0 0% 91%;
-    --sidebar-ring: 0 0% 60%;
+    --sidebar-background: 0 0% 9%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 0 0% 90%;
+    --sidebar-primary-foreground: 0 0% 9%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 90%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 0 0% 83%;
 
     /* Semantic risk colors */
     --danger: 8 90% 60%;
@@ -56,30 +58,31 @@
     /* Custom tokens */
     --surface-elevated: 0 0% 99%;
     --surface-sunken: 0 0% 97%;
-    --text-tertiary: 0 0% 55%;
-    --highlight: 0 0% 12%;
+    --text-tertiary: 0 0% 83%;
+    --highlight: 0 0% 90%;
   }
 
   .dark {
-    --background: 0 0% 3%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 6%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 5%;
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 55%;
+    --background: 0 0% 9%;
+    --foreground: 0 0% 90%;
+    --card: 0 0% 15%;
+    --card-foreground: 0 0% 90%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 90%;
+    --primary: 0 0% 90%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 90%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 83%;
     --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 98%;
+    --accent-foreground: 0 0% 90%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 15%;
     --input: 0 0% 15%;
     --ring: 0 0% 83%;
+    --nav: 0 0% 9%;
 
     --danger: 8 85% 55%;
     --danger-foreground: 0 0% 100%;
@@ -135,4 +138,5 @@
   .glow-lg {
     box-shadow: 0 0 60px hsl(0 0% 0% / 0.1), 0 10px 40px hsl(0 0% 0% / 0.1);
   }
+
 }

@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import StarLogo from "@/components/StarLogo";
 import { Eye, EyeOff, ArrowLeft, LogIn, AlertCircle } from "lucide-react";
 import { api, ApiError, tokenStore } from "@/lib/api";
@@ -62,12 +61,6 @@ const Login = () => {
     }
   };
 
-  const fillAdmin = () => {
-    setEmail(ADMIN_USER);
-    setPassword(ADMIN_PASSWORD);
-    setError("");
-  };
-
   const fillDemo = () => {
     setEmail(DEMO_EMAIL);
     setPassword(DEMO_PASSWORD);
@@ -75,19 +68,20 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Dot grid background */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 1px 1px, hsl(0 0% 0% / 0.06) 1px, transparent 0)",
-          backgroundSize: "32px 32px",
-        }}
-      />
+    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,hsl(0_0%_16%),hsl(0_0%_9%)_55%)]" />
+        <div
+          className="absolute inset-0 opacity-35"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, hsl(0 0% 15% / 0.35) 1px, transparent 1px), linear-gradient(to bottom, hsl(0 0% 15% / 0.35) 1px, transparent 1px)",
+            backgroundSize: "46px 46px",
+          }}
+        />
+      </div>
 
-      {/* Top bar */}
-      <div className="relative z-10 flex items-center justify-between px-6 md:px-10 h-16 border-b border-border/50 bg-background/70 backdrop-blur-2xl">
+      <div className="relative z-10 flex items-center justify-between px-6 md:px-10 h-16 border-b border-border/70 bg-background/70 backdrop-blur-2xl">
         <a href="/" className="flex items-center gap-2.5 group">
           <StarLogo className="w-6 h-6 text-foreground group-hover:scale-110 transition-transform duration-200" />
           <span className="font-display font-bold text-foreground">GraphGST</span>
@@ -101,206 +95,170 @@ const Login = () => {
         </a>
       </div>
 
-      {/* Main content */}
-      <div className="flex-1 flex items-center justify-center px-4 py-12 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 24, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          className="w-full max-w-md"
-        >
-          {/* Brand mark above card */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
+      <div className="relative z-10 flex-1 flex items-center justify-center px-4 py-10 md:px-8 md:py-14">
+        <div className="max-w-6xl mx-auto grid gap-7 lg:grid-cols-[1.05fr_0.95fr]">
+          <motion.section
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15, duration: 0.4 }}
-            className="flex flex-col items-center mb-8"
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="rounded-3xl border border-border/80 bg-card/55 backdrop-blur-xl p-7 md:p-9"
           >
-            <div className="w-14 h-14 rounded-2xl bg-foreground flex items-center justify-center mb-4 shadow-lg shadow-foreground/15">
-              <StarLogo className="w-8 h-8 text-primary-foreground" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background/80 px-3 py-1 text-xs text-muted-foreground">
+              Workspace Access
             </div>
-            <h1 className="font-display font-bold text-2xl text-foreground">GraphGST</h1>
-            <p className="text-sm text-muted-foreground mt-1">AI-Powered GST Reconciliation</p>
-          </motion.div>
+            <h1 className="mt-5 font-display text-4xl md:text-5xl leading-[1.08] tracking-tight text-foreground">
+              Secure sign in for your GST operations hub.
+            </h1>
+            <p className="mt-4 text-sm md:text-base text-muted-foreground max-w-xl leading-relaxed">
+              Access reconciliation dashboards, risk graphs, invoice intelligence, and vendor anomaly workflows from a single control plane.
+            </p>
 
-          <Card className="border-border shadow-xl shadow-foreground/[0.06]">
-            <CardHeader className="pb-5">
-              <CardTitle className="font-display text-xl text-foreground">Sign in</CardTitle>
-              <CardDescription className="text-muted-foreground text-sm">
-                Enter your credentials to access your workspace
-              </CardDescription>
-            </CardHeader>
+            <div className="mt-8 grid sm:grid-cols-3 gap-3">
+              <div className="rounded-2xl border border-border bg-background/70 p-4">
+                <p className="text-xl font-semibold text-foreground">50K+</p>
+                <p className="text-xs text-muted-foreground mt-1">Returns processed</p>
+              </div>
+              <div className="rounded-2xl border border-border bg-background/70 p-4">
+                <p className="text-xl font-semibold text-foreground">99.2%</p>
+                <p className="text-xs text-muted-foreground mt-1">Matching accuracy</p>
+              </div>
+              <div className="rounded-2xl border border-border bg-background/70 p-4">
+                <p className="text-xl font-semibold text-foreground">3 min</p>
+                <p className="text-xs text-muted-foreground mt-1">Average cycle</p>
+              </div>
+            </div>
+          </motion.section>
 
-            <form onSubmit={handleSubmit}>
-              <CardContent className="space-y-4">
-                {/* Error message */}
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-start gap-2.5 px-3.5 py-3 rounded-lg bg-destructive/8 border border-destructive/20 text-sm text-destructive"
-                  >
-                    <AlertCircle size={15} className="mt-0.5 flex-shrink-0" />
-                    <span>{error}</span>
-                  </motion.div>
-                )}
-
-                {/* Email */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="email" className="text-sm font-medium text-foreground">
-                    Email address
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    autoComplete="email"
-                    className="h-10 text-sm"
-                  />
-                </div>
-
-                {/* Password */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password" className="text-sm font-medium text-foreground">
-                      Password
-                    </Label>
-                    <a
-                      href="#"
-                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                      tabIndex={-1}
-                    >
-                      Forgot password?
-                    </a>
+          <motion.section
+            initial={{ opacity: 0, y: 24, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="w-full"
+          >
+            <Card className="border-border/80 bg-card/90 backdrop-blur-2xl shadow-2xl shadow-black/25">
+              <CardHeader className="pb-5">
+                <div className="flex items-center gap-3 mb-1">
+                  <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center">
+                    <StarLogo className="w-5 h-5 text-primary-foreground" />
                   </div>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      autoComplete="current-password"
-                      className="h-10 text-sm pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      tabIndex={-1}
-                    >
-                      {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                    </button>
+                  <div>
+                    <CardTitle className="font-display text-xl text-foreground">Sign in</CardTitle>
+                    <CardDescription className="text-muted-foreground text-sm">
+                      Enter your credentials to access your workspace
+                    </CardDescription>
                   </div>
                 </div>
-              </CardContent>
+              </CardHeader>
 
-              <CardFooter className="flex flex-col gap-3 pt-2">
-                <Button
-                  type="submit"
-                  className="w-full h-10 text-sm font-semibold gap-2"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <span className="flex items-center gap-2">
-                      <span className="w-4 h-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" />
-                      Signing in…
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      <LogIn size={15} />
-                      Sign in
-                    </span>
+              <form onSubmit={handleSubmit}>
+                <CardContent className="space-y-4">
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-start gap-2.5 px-3.5 py-3 rounded-lg bg-destructive/10 border border-destructive/30 text-sm text-destructive"
+                    >
+                      <AlertCircle size={15} className="mt-0.5 flex-shrink-0" />
+                      <span>{error}</span>
+                    </motion.div>
                   )}
-                </Button>
 
-                <p className="text-center text-xs text-muted-foreground">
-                  Don't have an account?{" "}
-                  <a href="#" className="text-foreground font-medium underline underline-offset-2 hover:opacity-70 transition-opacity">
-                    Request access
-                  </a>
-                </p>
-              </CardFooter>
-            </form>
-          </Card>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="email" className="text-sm font-medium text-foreground">
+                      Email address
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      autoComplete="email"
+                      className="h-11 text-sm bg-background"
+                    />
+                  </div>
 
-          {/* Demo credentials card */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
-            className="mt-4"
-          >
-            <div className="rounded-xl border border-border bg-surface-sunken p-4 space-y-4">
-              {/* Admin (real backend) */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Admin Login</p>
-                  <button
-                    type="button"
-                    onClick={fillAdmin}
-                    className="text-[11px] font-semibold text-foreground border border-border bg-background px-2.5 py-1 rounded-md hover:bg-accent transition-colors"
-                  >
-                    Autofill
-                  </button>
-                </div>
-                <Separator className="mb-3" />
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">Username</span>
-                    <code className="text-xs font-mono text-foreground bg-background border border-border px-2 py-0.5 rounded-md">
-                      {ADMIN_USER}
-                    </code>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password" className="text-sm font-medium text-foreground">
+                        Password
+                      </Label>
+                      <a
+                        href="#"
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        tabIndex={-1}
+                      >
+                        Forgot password?
+                      </a>
+                    </div>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        autoComplete="current-password"
+                        className="h-11 text-sm pr-10 bg-background"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">Password</span>
-                    <code className="text-xs font-mono text-foreground bg-background border border-border px-2 py-0.5 rounded-md">
-                      {ADMIN_PASSWORD}
-                    </code>
-                  </div>
-                </div>
-              </div>
+                </CardContent>
 
-              <Separator />
+                <CardFooter className="flex flex-col gap-3 pt-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={fillDemo}
+                      className="w-full h-11 text-sm font-semibold"
+                    >
+                      Autofill
+                    </Button>
 
-              {/* Demo (offline) */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Demo (Offline)</p>
-                  <button
-                    type="button"
-                    onClick={fillDemo}
-                    className="text-[11px] font-semibold text-foreground border border-border bg-background px-2.5 py-1 rounded-md hover:bg-accent transition-colors"
-                  >
-                    Autofill
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">Email</span>
-                    <code className="text-xs font-mono text-foreground bg-background border border-border px-2 py-0.5 rounded-md">
-                      {DEMO_EMAIL}
-                    </code>
+                    <Button
+                      type="submit"
+                      className="w-full h-11 text-sm font-semibold gap-2"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <span className="flex items-center gap-2">
+                          <span className="w-4 h-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" />
+                          Signing in...
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <LogIn size={15} />
+                          Sign in
+                        </span>
+                      )}
+                    </Button>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">Password</span>
-                    <code className="text-xs font-mono text-foreground bg-background border border-border px-2 py-0.5 rounded-md">
-                      {DEMO_PASSWORD}
-                    </code>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
+
+                  <p className="text-center text-xs text-muted-foreground">
+                    Don't have an account?{" "}
+                    <a href="#" className="text-foreground font-medium underline underline-offset-2 hover:opacity-70 transition-opacity">
+                      Request access
+                    </a>
+                  </p>
+                </CardFooter>
+              </form>
+            </Card>
+          </motion.section>
+        </div>
       </div>
 
-      {/* Footer note */}
-      <div className="relative z-10 text-center py-6 border-t border-border/40">
+      <div className="relative z-10 text-center py-6 border-t border-border/50 bg-background/45 backdrop-blur-md">
         <p className="text-xs text-muted-foreground">© 2026 GraphGST. All rights reserved.</p>
       </div>
     </div>
